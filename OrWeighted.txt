@@ -1,0 +1,1 @@
+{"oriented":true,"weighted":true,"graph":{"a":[{"from":"a","to":"b","weight":3.0,"mark":""}],"b":[{"from":"b","to":"e","weight":12.0,"mark":""},{"from":"b","to":"a","weight":10.0,"mark":""}],"c":[{"from":"c","to":"d","weight":-1.0,"mark":""}],"d":[],"e":[],"f":[{"from":"f","to":"c","weight":11.0,"mark":""}],"g":[{"from":"g","to":"f","weight":10.0,"mark":""}]}}

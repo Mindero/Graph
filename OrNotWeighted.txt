@@ -1,0 +1,1 @@
+{"oriented":true,"weighted":false,"graph":{"p":[{"from":"p","to":"a","weight":1.0,"mark":""}],"a":[{"from":"a","to":"p","weight":1.0,"mark":""}],"b":[{"from":"b","to":"b","weight":1.0,"mark":""}],"test":[{"from":"test","to":"k","weight":1.0,"mark":""}],"k":[],"n":[{"from":"n","to":"a","weight":1.0,"mark":""},{"from":"n","to":"fe","weight":1.0,"mark":""}],"fe":[]}}
