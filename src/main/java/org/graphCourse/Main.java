@@ -6,7 +6,10 @@ import java.util.Scanner;
 
 /*
 2 - 18,
-3 - 1
+3 - 1,
+4 - 18,
+5 - 23,
+6 - 30,
  */
 public class Main {
     public static void main(String[] args) {
@@ -18,8 +21,8 @@ public class Main {
         while (true) {
             if (!graphExist) {
                 creatingMenu(out);
-                char op = sc.next().charAt(0);
-                if (op == '3') {
+                String op = sc.next();
+                if (op.equals("3")) {
                     out.println("Введите название файла без расширения");
                     String fileName = STR."\{sc.next()}.txt";
                     File file = new File(fileName);
@@ -34,28 +37,28 @@ public class Main {
                     }
                 } else {
                     out.println("Граф взвешенный? [Y/n]");
-                    boolean weighted = (sc.next().charAt(0) == 'Y');
-                    if (op == '1') {
+                    boolean weighted = sc.next().equals( "Y");
+                    if (op.equals("1")) {
                         g = new Graph(true, weighted);
-                    } else if (op == '2') {
+                    } else if (op.equals("2")) {
                         g = new Graph(false, weighted);
                     } else throw new UnsupportedOperationException();
                 }
                 graphExist = true;
             }
             menu(out);
-            char op = sc.next().charAt(0);
+            String op = sc.next();
             assert g != null;
             try {
-                if (op == '1') {
+                if (op.equals("1")) {
                     out.println("Введите название вершины");
                     String vertex = sc.next();
                     g.addVertex(vertex);
-                } else if (op == '2') {
+                } else if (op.equals("2")) {
                     out.println("Введите название вершины");
                     String vertex = sc.next();
                     g.deleteVertex(vertex);
-                } else if (op == '3') {
+                } else if (op.equals("3")) {
                     out.println("Введите пару вершин");
                     String from = sc.next();
                     String to = sc.next();
@@ -65,14 +68,14 @@ public class Main {
                         w = sc.nextDouble();
                     }
                     g.addEdge(new Edge(from, to, w));
-                } else if (op == '4') {
+                } else if (op.equals("4")) {
                     out.println("Введите пару вершин");
                     String from = sc.next();
                     String to = sc.next();
                     g.removeEdge(new Edge(from, to));
-                } else if (op == '5') {
+                } else if (op.equals("5")) {
                     out.println(g);
-                } else if (op == '6') {
+                } else if (op.equals("6")) {
                     out.println("Введите название файла без расширения");
                     String fileName = STR."\{sc.next()}.txt";
                     File file = new File(fileName);
@@ -83,10 +86,10 @@ public class Main {
                     } catch (IOException e) {
                         out.println("Такого файла нет");
                     }
-                } else if (op == '7') {
+                } else if (op.equals("7")) {
                     graphExist = false;
                     g = null;
-                } else if (op == '8') {
+                } else if (op.equals("8")) {
                     out.println("Введите вершину x");
                     String x = sc.next();
                     out.println("Введите вершину y");
@@ -94,11 +97,23 @@ public class Main {
                     Optional<String> res = g.task1(x, y);
                     if (res.isEmpty()) out.println("Такой вершины нет");
                     else out.println(res.get());
-                } else if (op == '9') {
+                } else if (op.equals("9")) {
                     out.println("Введите вершину");
                     String x = sc.next();
                     out.println(g.task2(x));
-                } else throw new UnsupportedOperationException();
+                } else if (op.equals("10")){
+                    g = Graph.task3(g);
+                }
+                else if (op.equals("11")) {
+                    Optional<String> node = g.task4();
+                    if (node.isEmpty()) {
+                        out.println("Нет такой вершины");
+                    }
+                    else{
+                        out.println("Подходит вершина " + node.get());
+                    }
+                }
+                else throw new UnsupportedOperationException();
             }
             catch (Exception ex){
                 out.println(ex.getMessage());
@@ -116,7 +131,9 @@ public class Main {
                         "6 - Вывести список смежности в файл\n" +
                         "7 - Создать новый граф\n" +
                         "8 - Определить существует ли вершина, в которую есть дуга из x, но нет из y\n" +
-                        "9 - Вывести для вершины все <выходящие> соседние вершины");
+                        "9 - Вывести для вершины все <выходящие> соседние вершины\n" +
+                        "10 - Построить граф, полученный однократным удалением вершин с нечётными степенями\n" +
+                        "11 - Проверить, можно ли из орграфа удалить какую-либо вершину так, чтобы получилось дерево");
     }
 
     static void creatingMenu(PrintStream out) {

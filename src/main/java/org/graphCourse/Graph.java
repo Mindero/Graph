@@ -156,7 +156,7 @@ public class Graph {
     }
 
     public Map<String, Set<Edge>> getGraph() {
-        return graph;
+        return new HashMap<>(graph);
     }
 
     // Определить существует ли вершина, в которую есть дуга из x, но нет из y
@@ -179,4 +179,79 @@ public class Graph {
             throw new UnsupportedOperationException("Задача не определена для неориентированного графа");
         return graph.get(x).stream().map(Edge::getTo).toList();
     }
+
+    // Построить граф, полученный однократным удалением вершин с нечётными степенями.
+    public static Graph task3(Graph g) {
+        Graph h = Graph.copyOf(g);
+        g.getGraph().forEach((key, value) -> {
+            if (value.size() % 2 == 1){
+                h.deleteVertex(key);
+            }
+        });
+        return h;
+    }
+
+    private Map<String, Set<Edge>> reverse_graph(){
+        Map<String, Set<Edge>> reversed_graph = new HashMap<>();
+        graph.keySet().forEach(v -> reversed_graph.put(v, new HashSet<>()));
+        for (var entry : graph.entrySet()){
+            String v = entry.getKey();
+            Set<Edge> edges = entry.getValue();
+            for (Edge edge : edges){
+                Edge reversed_edge = Edge.reversed(edge);
+                String to = edge.getTo();
+                Set<Edge> gr = reversed_graph.get(to);
+                gr.add(reversed_edge);
+                reversed_graph.put(to, gr);
+            }
+        }
+        return reversed_graph;
+    }
+
+    // Проверить, можно ли из орграфа удалить какую-либо вершину так, чтобы получилось дерево.
+    public Optional<String> task4() {
+        Map<String, Set<Edge>> reversed_graph = reverse_graph();
+        for (String del_v : graph.keySet()){
+            List<String> start_vertexes =
+                    graph.keySet().stream()
+                                  .filter(v -> (!v.equals(del_v) && startedVertex(v, del_v, reversed_graph)))
+                                  .toList();
+            if (start_vertexes.size() == 1){
+                String start_vertex = start_vertexes.getFirst();
+                Set<String> used = new HashSet<>();
+                used.add(del_v);
+                Queue<String> q = new ArrayDeque<>();
+                q.add(start_vertex);
+                used.add(start_vertex);
+                boolean result = true;
+                while (!q.isEmpty()){
+                    String v = q.poll();
+                    for (Edge edge : graph.get(v)){
+                        String u = edge.getTo();
+                        if (u.equals(del_v)) continue;
+
+                        if (used.contains(u)) {
+                            result = false;
+                            break;
+                        }
+                        else {
+                            q.add(u);
+                            used.add(u);
+                        }
+                    }
+                }
+                if (used.size() == graph.size() && result){
+                    return Optional.of(del_v);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+    // Вершина start может быть корнем дерева
+    private boolean startedVertex (String start, String del_v, Map<String, Set<Edge>> graph){
+        Set<Edge> startEdges = graph.get(start);
+        // Если
+        return startEdges.isEmpty() || startEdges.stream().allMatch(edge -> edge.getTo().equals(del_v));
+    }
+
 }
