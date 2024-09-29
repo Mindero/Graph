@@ -210,6 +210,8 @@ public class Graph {
 
     // Проверить, можно ли из орграфа удалить какую-либо вершину так, чтобы получилось дерево.
     public Optional<String> task4() {
+        if (!oriented)
+            throw new UnsupportedOperationException("Задача не определена для неориентированного графа");
         Map<String, Set<Edge>> reversed_graph = reverse_graph();
         for (String del_v : graph.keySet()){
             List<String> start_vertexes =
@@ -252,6 +254,41 @@ public class Graph {
         Set<Edge> startEdges = graph.get(start);
         // Если
         return startEdges.isEmpty() || startEdges.stream().allMatch(edge -> edge.getTo().equals(del_v));
+    }
+
+    // Определить, от какой из вершин u1 и u2 путь до v короче (по числу дуг).
+    // Возвращает Optional.empty если обе вершины не достигают v.
+    public Optional<String> task5 (String u1, String u2, String v){
+        Optional<Integer> dist1 = findMinDistUnweighted(u1, v);
+        Optional<Integer> dist2 = findMinDistUnweighted(u2, v);
+        if (dist1.isEmpty() && dist2.isEmpty()) return Optional.empty();
+        if (dist1.isEmpty()) return Optional.of(u2);
+        if (dist2.isEmpty()) return Optional.of(u1);
+        if (dist1.get() <= dist2.get()) return Optional.of(u1);
+        else return Optional.of(u2);
+    }
+
+    // Найти длину кратчайшего пути от вершины s до вершины t
+    // Работает для невзвешенных графов
+    // возращает Optional.empty(), если из s не достижима t
+    public Optional<Integer> findMinDistUnweighted (String s, String t){
+        Map<String, Integer> dist = new HashMap<>();
+        Queue<String> q = new ArrayDeque<>();
+        dist.put(s, 0);
+        q.add(s);
+        while(!q.isEmpty()){
+            String v = q.poll();
+            Integer distV = dist.get(v);
+            if (v.equals(t)) return Optional.of(distV);
+            for (Edge edge : graph.get(v)){
+                String u = edge.getTo();
+                if (!dist.containsKey(u) || dist.get(u) > distV + 1){
+                    dist.put(u, distV + 1);
+                    q.add(u);
+                }
+            }
+        }
+        return Optional.empty();
     }
 
 }
