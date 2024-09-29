@@ -67,6 +67,9 @@ public class Graph {
     public int getCountNodes() {
         return graph.size();
     }
+    public boolean vertexExist(String v){
+        return graph.containsKey(v);
+    }
 
     public void addVertex(String value) {
         if (graph.containsKey(value)) {
@@ -128,7 +131,7 @@ public class Graph {
         for (var entry : graph.entrySet()) {
             edgeList.addAll(entry.getValue().stream().toList());
         }
-        return edgeList;
+        return new ArrayList<>(edgeList);
     }
 
     public boolean isWeighted() {
@@ -291,4 +294,22 @@ public class Graph {
         return Optional.empty();
     }
 
+    // Построение MST алгоритмом Краскала
+    public Graph task6(){
+        if (oriented)
+            throw new UnsupportedOperationException("Задача не определена для неориентированного графа");
+        Graph mst = new Graph(false, weighted);
+        graph.keySet().forEach(mst::addVertex);
+        List<Edge> edges = getEdgeList();
+        edges.sort(Comparator.comparingDouble(Edge::getWeight));
+        DSU d = new DSU(graph.keySet());
+        for (Edge edge : edges){
+            String x = edge.getFrom();
+            String y = edge.getTo();
+            if (d.merge(x, y)){
+                mst.addEdge(new Edge(edge));
+            }
+        }
+        return mst;
+    }
 }

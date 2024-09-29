@@ -28,6 +28,9 @@ public class Edge {
     public Edge(String from, String to) {
         this(from, to, 1.0, "");
     }
+    public Edge(Edge e){
+        this(e.getFrom(), e.getTo(), e.getWeight(), e.getMark());
+    }
 
     static public Edge reversed(Edge edge) {
         return new Edge(edge.getTo(), edge.getFrom()
