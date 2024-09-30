@@ -222,29 +222,9 @@ public class Graph {
                                   .filter(v -> (!v.equals(del_v) && startedVertex(v, del_v, reversed_graph)))
                                   .toList();
             if (start_vertexes.size() == 1){
-                String start_vertex = start_vertexes.getFirst();
-                Set<String> used = new HashSet<>();
-                used.add(del_v);
-                Queue<String> q = new ArrayDeque<>();
-                q.add(start_vertex);
-                used.add(start_vertex);
-                boolean result = true;
-                while (!q.isEmpty()){
-                    String v = q.poll();
-                    for (Edge edge : graph.get(v)){
-                        String u = edge.getTo();
-                        if (u.equals(del_v)) continue;
-
-                        if (used.contains(u)) {
-                            result = false;
-                            break;
-                        }
-                        else {
-                            q.add(u);
-                            used.add(u);
-                        }
-                    }
-                }
+                Map<String, Integer> used = new HashMap<>();
+                used.put(del_v, 1);
+                boolean result = dfs(start_vertexes.getFirst(), used);
                 if (used.size() == graph.size() && result){
                     return Optional.of(del_v);
                 }
@@ -257,6 +237,16 @@ public class Graph {
         Set<Edge> startEdges = graph.get(start);
         // Если
         return startEdges.isEmpty() || startEdges.stream().allMatch(edge -> edge.getTo().equals(del_v));
+    }
+
+    public boolean dfs(String v, Map<String, Integer> used){
+        used.put(v, 1);
+        for (Edge edge : graph.get(v)){
+            String u = edge.getTo();
+            if (used.containsKey(u)) return false;
+            if (!dfs(u, used)) return false;
+        }
+        return true;
     }
 
     // Определить, от какой из вершин u1 и u2 путь до v короче (по числу дуг).
@@ -274,6 +264,7 @@ public class Graph {
     // Найти длину кратчайшего пути от вершины s до вершины t
     // Работает для невзвешенных графов
     // возращает Optional.empty(), если из s не достижима t
+    // bfs
     public Optional<Integer> findMinDistUnweighted (String s, String t){
         Map<String, Integer> dist = new HashMap<>();
         Queue<String> q = new ArrayDeque<>();
