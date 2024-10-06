@@ -17,8 +17,8 @@ public class DSU {
         if (to.get(v).equals(v)) {
             return v;
         }
-        String nxt = to.get(v);
-        to.put(v, get(nxt));
+        String nxt = get(to.get(v));
+        to.put(v, nxt);
         return nxt;
     }
 

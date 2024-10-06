@@ -4,12 +4,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.lang.Double.min;
 
 
 public class Graph {
@@ -20,6 +24,7 @@ public class Graph {
     private final boolean weighted;
     @JsonProperty("graph")
     private final Map<String, Set<Edge>> graph;
+    private final double EPSILON = -1e6;
 
     public Graph(boolean oriented, boolean weighted, Map<String, Set<Edge>> graph) {
 
@@ -37,6 +42,9 @@ public class Graph {
 
     static public Graph copyOf(Graph g) {
         return new Graph(g.oriented, g.weighted, g.graph);
+    }
+    int nodes_count(){
+        return graph.size();
     }
 
     public static Graph ReadGraphFromFile(InputStream in) throws IOException {
@@ -92,7 +100,7 @@ public class Graph {
         }
         String source = edge.getFrom(), target = edge.getTo();
         if (graph.get(source).stream().anyMatch(ed -> ed.getTo().equals(target))){
-            throw new IllegalArgumentException("Уже существует ребро");
+            throw new IllegalArgumentException(STR."Уже существует ребро между \{source}, \{target}");
         }
         graph.get(edge.getFrom()).add(edge);
         if (!oriented) {
@@ -302,5 +310,137 @@ public class Graph {
             }
         }
         return mst;
+    }
+    public Set<String> findCenter(){
+        Set<String> center = new HashSet<>();
+        Double minDist = null;
+        for (String node : graph.keySet()){
+            double eccentricity = findEccentricity(node);
+            if (minDist == null || eccentricity <= minDist){
+                if (minDist != null && eccentricity < minDist) center.clear();
+                minDist = eccentricity;
+                center.add(node);
+            }
+        }
+        return center;
+    }
+    // Dijkstra
+    double findEccentricity(String node){
+        Map<String, Double> dist = new HashMap<>();
+        TreeSet<Pair<Double, String>> q = new TreeSet<>();
+        dist.put(node, 0.0);
+        q.add(new Pair<>(0.0, node));
+        while (!q.isEmpty()){
+            String v = q.getFirst().second();
+            double d = q.getFirst().first();
+            System.out.println(STR."\{v} \{d}");
+            q.pollFirst();
+            for (Edge edge : graph.get(v)){
+                String u = edge.getTo();
+                double w = edge.getWeight();
+                if (!dist.containsKey(u) || dist.get(u) > d + w){
+                    if (dist.containsKey(u))
+                        q.remove(new Pair<>(dist.get(u), u));
+                    dist.put(u, d + w);
+                    q.add(new Pair<>(d + w, u));
+                }
+            }
+        }
+        return dist.values().stream().max(Double::compare).get();
+    }
+    // Найти кратчайшие пути из u1 и u2 до v.
+    // Возвращает массив:
+    // [0] - Optional из пути из u1 до v или empty
+    // [1] - Optional из пути из u2 до v или empty
+    // Ford-Bellman
+    public List<Optional<List<String>>> shortestPath (String v, String u1, String u2){
+        List<Optional<List<String>>> paths = new ArrayList<>();
+        Map<String, Double> dist = new HashMap<>();
+        Map<String, String> pr = new HashMap<>();
+        pr.put(v, v);
+        dist.put(v, 0.0);
+        List<Edge> edges = getEdgeList();
+        for (int i = 0; i < nodes_count(); ++i){
+            for (Edge edge : edges){
+                String from = edge.getFrom();
+                String to = edge.getTo();
+                double w = edge.getWeight();
+                if (dist.containsKey(from) &&
+                        (!dist.containsKey(to) || dist.get(to) > dist.get(from) + w)){
+                    dist.put(to, dist.get(from) + w);
+                    pr.put(to, from);
+                }
+            }
+        }
+        paths.add(recover_path(v, u1, pr, dist));
+        paths.add( recover_path(v, u2, pr, dist));
+        return paths;
+    }
+    // Восстановление кратчайшего пути
+    private Optional<List<String>> recover_path(String from, String to
+                                                ,Map<String, String> pr, Map<String, Double> dist){
+        if (!dist.containsKey(to)) return Optional.empty();
+        String cur = to;
+        List<String> path = new ArrayList<>();
+        while(!cur.equals(from)){
+            path.add(cur);
+            cur = pr.get(cur);
+        }
+        path.add(from);
+        return Optional.of(path);
+    }
+
+    // Floyd-Warshall
+    public Optional<List<String>> findNegativeCycle(){
+        BiMap<String, Integer> index = HashBiMap.create();
+        graph.keySet().forEach(k-> index.put(k, index.size()));
+        int sz = index.size();
+        double[][] dist = new double[sz][sz];
+        int[][] from = new int[sz][sz];
+        // Заполняем бесконечностью
+        for (int i = 0; i < sz; ++i){
+            for (int j = 0; j < sz; ++j){
+                from[i][j] = -1;
+                if (i != j) dist[i][j] = Double.POSITIVE_INFINITY;
+                else dist[i][j] = 0;
+            }
+        }
+        // Проход по ребрам
+        for (String node : graph.keySet()){
+            for (Edge edge : graph.get(node)){
+                String to = edge.getTo();
+                double w = edge.getWeight();
+                int node_index = index.get(node);
+                int to_index = index.get(to);
+                from[node_index][to_index] = node_index;
+                dist[node_index][to_index] =
+                        Double.min(dist[node_index][to_index], w);
+            }
+        }
+        // алгоритм
+        for (int k = 0; k < sz; ++ k)
+            for (int i = 0; i < sz; ++i)
+                for (int j = 0; j < sz; ++j){
+                    if ( dist[i][k] != Double.POSITIVE_INFINITY
+                         && dist[k][j] != Double.POSITIVE_INFINITY
+                         && dist[i][k] + dist[k][j] < dist[i][j]){
+                        dist[i][j] = dist[i][k] + dist[k][j];
+                        from[i][j] = from[k][j];
+                    }
+                }
+        // Нахождение первой вершины в цикле
+        List<String> cycle = null;
+        for (int i = 0; i < sz; ++i) if (dist[i][i] < 0.0){
+            for (int j = 0 ; j < sz - 1; ++j)
+                i = from[i][i];
+            cycle = new ArrayList<>();
+            cycle.add(index.inverse().get(i));
+            for (int v = from[i][i]; v != i; v = from[i][v]){
+                cycle.add(index.inverse().get(v));
+            }
+            cycle = cycle.reversed();
+            break;
+        }
+        return Optional.ofNullable(cycle);
     }
 }

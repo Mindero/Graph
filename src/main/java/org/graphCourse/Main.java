@@ -1,8 +1,10 @@
 package org.graphCourse;
 
 import java.io.*;
+import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.Set;
 
 /*
 2 - 18,
@@ -11,6 +13,9 @@ import java.util.Scanner;
 5 - 23,
 6 - 30,
 7 - к
+8 - 11 (Дейкстра)
+9 - 13 (Беллман-Форд)
+10 - 18 (Флойд)
  */
 public class Main {
     public static void main(String[] args) {
@@ -131,6 +136,36 @@ public class Main {
                     Graph mst = g.task6();
                     out.println(mst.toString());
                 }
+                else if (op.equals("14")){
+                    Set<String> center = g.findCenter();
+                    out.println("Центр графа = " + center);
+                }
+                else if (op.equals("15")){
+                    out.println("Введите вершину u1");
+                    String u1 = sc.next();
+                    out.println("Введите вершину u2");
+                    String u2 = sc.next();
+                    out.println("Введите вершину v");
+                    String v = sc.next();
+                    List<Optional<List<String>>> path1 = g.shortestPath(v, u1, u2);
+                    if (path1.getFirst().isEmpty()){
+                        out.println(STR."Кратчайшего пути из \{u1}до \{v} не существует");
+                    }
+                    else{
+                        out.println(STR."Кратчайший путь от \{u1} до \{v}:\n\{path1.getFirst().get()}\n");
+                    }
+                    if (path1.getLast().isEmpty()){
+                        out.println(STR."Кратчайшего пути из \{u2}до \{v} не существует");
+                    }
+                    else{
+                        out.println(STR."Кратчайший путь от \{u2} до \{v}:\n\{path1.getLast().get()}\n");
+                    }
+                }
+                else if (op.equals("16")){
+                    Optional<List<String>> cycle = g.findNegativeCycle();
+                    if (cycle.isEmpty()) out.println("Цикла отрицательного веса не существует");
+                    else out.println(cycle.get());
+                }
                 else throw new UnsupportedOperationException();
             }
             catch (Exception ex){
@@ -148,12 +183,16 @@ public class Main {
                 "5 - Посмотреть список смежности\n" +
                 "6 - Вывести список смежности в файл\n" +
                 "7 - Создать новый граф\n" +
-                "8 - Определить существует ли вершина, в которую есть дуга из x, но нет из y\n" +
-                "9 - Вывести для вершины все <выходящие> соседние вершины\n" +
-                "10 - Построить граф, полученный однократным удалением вершин с нечётными степенями\n" +
-                "11 - Проверить, можно ли из орграфа удалить какую-либо вершину так, чтобы получилось дерево\n" +
-                "12 - Определить, от какой из вершин u1 и u2 путь до v короче (по числу дуг).\n" +
-                "13 - Построить минимальное остовное дерево (алгоритм Краскала)");
+//                "8 - Определить существует ли вершина, в которую есть дуга из x, но нет из y\n" +
+//                "9 - Вывести для вершины все <выходящие> соседние вершины\n" +
+//                "10 - Построить граф, полученный однократным удалением вершин с нечётными степенями\n" +
+//                "11 - Проверить, можно ли из орграфа удалить какую-либо вершину так, чтобы получилось дерево\n" +
+//                "12 - Определить, от какой из вершин u1 и u2 путь до v короче (по числу дуг).\n" +
+//                "13 - Построить минимальное остовное дерево (алгоритм Краскала)"
+                "14 - Найти центр графа\n" +
+                "15 - Вывести кратчайшие пути из u1 и u2 до v\n" +
+                "16 - Вывести цикл отрицательного веса, если он есть\n"
+                );
     }
 
     static void creatingMenu(PrintStream out) {
