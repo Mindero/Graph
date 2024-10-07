@@ -149,13 +149,13 @@ public class Main {
                     String v = sc.next();
                     List<Optional<List<String>>> path1 = g.shortestPath(v, u1, u2);
                     if (path1.getFirst().isEmpty()){
-                        out.println(STR."Кратчайшего пути из \{u1}до \{v} не существует");
+                        out.println(STR."Кратчайшего пути из \{u1} до \{v} не существует");
                     }
                     else{
                         out.println(STR."Кратчайший путь от \{u1} до \{v}:\n\{path1.getFirst().get()}\n");
                     }
                     if (path1.getLast().isEmpty()){
-                        out.println(STR."Кратчайшего пути из \{u2}до \{v} не существует");
+                        out.println(STR."Кратчайшего пути из \{u2} до \{v} не существует");
                     }
                     else{
                         out.println(STR."Кратчайший путь от \{u2} до \{v}:\n\{path1.getLast().get()}\n");

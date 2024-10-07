@@ -317,7 +317,8 @@ public class Graph {
         for (String node : graph.keySet()){
             double eccentricity = findEccentricity(node);
             if (minDist == null || eccentricity <= minDist){
-                if (minDist != null && eccentricity < minDist) center.clear();
+                if (minDist != null && eccentricity < minDist)
+                    center.clear();
                 minDist = eccentricity;
                 center.add(node);
             }
@@ -333,7 +334,6 @@ public class Graph {
         while (!q.isEmpty()){
             String v = q.getFirst().second();
             double d = q.getFirst().first();
-            System.out.println(STR."\{v} \{d}");
             q.pollFirst();
             for (Edge edge : graph.get(v)){
                 String u = edge.getTo();
@@ -359,7 +359,8 @@ public class Graph {
         Map<String, String> pr = new HashMap<>();
         pr.put(v, v);
         dist.put(v, 0.0);
-        List<Edge> edges = getEdgeList();
+        Graph h = new Graph(oriented, weighted, reverse_graph());
+        List<Edge> edges = h.getEdgeList();
         for (int i = 0; i < nodes_count(); ++i){
             for (Edge edge : edges){
                 String from = edge.getFrom();
@@ -373,7 +374,7 @@ public class Graph {
             }
         }
         paths.add(recover_path(v, u1, pr, dist));
-        paths.add( recover_path(v, u2, pr, dist));
+        paths.add(recover_path(v, u2, pr, dist));
         return paths;
     }
     // Восстановление кратчайшего пути
@@ -431,8 +432,8 @@ public class Graph {
         // Нахождение первой вершины в цикле
         List<String> cycle = null;
         for (int i = 0; i < sz; ++i) if (dist[i][i] < 0.0){
-            for (int j = 0 ; j < sz - 1; ++j)
-                i = from[i][i];
+//            for (int j = 0 ; j < sz - 1; ++j)
+//                i = from[i][i];
             cycle = new ArrayList<>();
             cycle.add(index.inverse().get(i));
             for (int v = from[i][i]; v != i; v = from[i][v]){
