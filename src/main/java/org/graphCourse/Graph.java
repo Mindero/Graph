@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.Double.min;
+import static java.lang.Math.abs;
 
 
 public class Graph {
@@ -24,7 +25,7 @@ public class Graph {
     private final boolean weighted;
     @JsonProperty("graph")
     private final Map<String, Set<Edge>> graph;
-    private final double EPSILON = -1e6;
+    private final double EPSILON = 1e-6;
 
     public Graph(boolean oriented, boolean weighted, Map<String, Set<Edge>> graph) {
 
@@ -63,7 +64,7 @@ public class Graph {
                 String from = (String) edge.get("from");
                 String to = (String) edge.get("to");
                 double weight = (double) edge.get("weight");
-                String mark = (String) edge.get("mark");
+                double mark = (double) edge.get("mark");
                 edges.add(new Edge(from, to, weight, mark));
             });
             graph.put(key, edges);
@@ -99,9 +100,9 @@ public class Graph {
             throw new IllegalArgumentException("Нет такой вершины");
         }
         String source = edge.getFrom(), target = edge.getTo();
-        if (graph.get(source).stream().anyMatch(ed -> ed.getTo().equals(target))){
-            throw new IllegalArgumentException(STR."Уже существует ребро между \{source}, \{target}");
-        }
+//        if (graph.get(source).stream().anyMatch(ed -> ed.getTo().equals(target))){
+//            throw new IllegalArgumentException(STR."Уже существует ребро между \{source}, \{target}");
+//        }
         graph.get(edge.getFrom()).add(edge);
         if (!oriented) {
             Edge newEdge = Edge.reversed(edge);
@@ -432,8 +433,8 @@ public class Graph {
         // Нахождение первой вершины в цикле
         List<String> cycle = null;
         for (int i = 0; i < sz; ++i) if (dist[i][i] < 0.0){
-//            for (int j = 0 ; j < sz - 1; ++j)
-//                i = from[i][i];
+            for (int j = 0 ; j < sz - 1; ++j)
+                i = from[i][i];
             cycle = new ArrayList<>();
             cycle.add(index.inverse().get(i));
             for (int v = from[i][i]; v != i; v = from[i][v]){
@@ -443,5 +444,55 @@ public class Graph {
             break;
         }
         return Optional.ofNullable(cycle);
+    }
+
+    public double getMaxFlow(String start, String end){
+        Map<String, List<Integer>> graph_edge = new HashMap<>();
+        graph.keySet().forEach(v -> graph_edge.put(v, new ArrayList<Integer>()));
+        List<Edge> edgeList = new ArrayList<>();
+        for (Edge edge : getEdgeList()){
+            String from = edge.getFrom();
+            String to = edge.getTo();
+            add_edge_flow(edge.edgeWithFlow(0), graph_edge, from, edgeList);
+            add_edge_flow(Edge.reversed(edge).edgeWithCap(0).edgeWithFlow(0), graph_edge, to, edgeList);
+        }
+        double maxFlow = 0;
+        while(true){
+            Map<String, Integer> used = new HashMap<>();
+            double addFlow = pushFlow(start, end, Double.POSITIVE_INFINITY, used, graph_edge, edgeList);
+            if (abs(addFlow) < EPSILON) break;
+            maxFlow += addFlow;
+        }
+        return maxFlow;
+    }
+
+    private static void add_edge_flow(Edge edge, Map<String, List<Integer>> graph_edge, String from, List<Edge> edgeList) {
+        List<Integer> edges = graph_edge.get(from);
+        edges.add(edgeList.size());
+        graph_edge.put(from, edges);
+        edgeList.add(edge);
+    }
+
+
+    // DFS, который пихает поток дальше
+    public double pushFlow ( String v, String end, double mn, Map<String, Integer> used
+                           , Map<String, List<Integer>> graph_edge, List<Edge> edgeList){
+        if (used.containsKey(v)) return 0;
+        if (v.equals(end)) return mn;
+        used.put(v, 1);
+        for (int i : graph_edge.get(v)){
+            Edge edge = edgeList.get(i);
+            // Если нельзя уже поток равен пропускной способности
+            if (abs(edge.getCapacity()) < EPSILON) continue;
+            String to = edge.getTo();
+            double flow = pushFlow(to, end, Double.min(mn, edge.getCapacity()), used, graph_edge, edgeList);
+            if (flow > EPSILON){
+                Edge revEdge = edgeList.get(i ^ 1);
+                edge.addFlow(flow);
+                revEdge.addFlow(-flow);
+                return flow;
+            }
+        }
+        return 0;
     }
 }

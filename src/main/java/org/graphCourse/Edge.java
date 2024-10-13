@@ -12,29 +12,29 @@ public class Edge {
     @JsonProperty("weight")
     private final double weight;
     @JsonProperty("mark")
-    private final String mark;
+    private double flow;
 
-    public Edge(String from, String to, double weight, String mark) {
+    public Edge(String from, String to, double weight, double flow) {
         this.from = from;
         this.to = to;
         this.weight = weight;
-        this.mark = mark;
+        this.flow = flow;
     }
 
     public Edge(String from, String to, double weight) {
-        this(from, to, weight, "");
+        this(from, to, weight, 0.0);
     }
 
     public Edge(String from, String to) {
-        this(from, to, 1.0, "");
+        this(from, to, 1.0, 0.0);
     }
     public Edge(Edge e){
-        this(e.getFrom(), e.getTo(), e.getWeight(), e.getMark());
+        this(e.getFrom(), e.getTo(), e.getWeight(), e.getFlow());
     }
 
     static public Edge reversed(Edge edge) {
         return new Edge(edge.getTo(), edge.getFrom()
-                , edge.getWeight(), edge.getMark());
+                , edge.getWeight(), edge.getFlow());
     }
 
     public String getFrom() {
@@ -48,9 +48,12 @@ public class Edge {
     public double getWeight() {
         return weight;
     }
+    public double getCapacity(){
+        return weight - flow;
+    }
 
-    public String getMark() {
-        return mark;
+    public double getFlow() {
+        return flow;
     }
 
     @Override
@@ -58,12 +61,12 @@ public class Edge {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Edge edge = (Edge) o;
-        return Double.compare(weight, edge.weight) == 0 && Objects.equals(from, edge.from) && Objects.equals(to, edge.to) && Objects.equals(mark, edge.mark);
+        return Double.compare(weight, edge.weight) == 0 && Objects.equals(from, edge.from) && Objects.equals(to, edge.to) && Objects.equals(flow, edge.flow);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(from, to, weight, mark);
+        return Objects.hash(from, to, weight, flow);
     }
 
     public String toString(boolean weighted) {
@@ -72,5 +75,14 @@ public class Edge {
         } else {
             return STR."(\{to}, \{weight})";
         }
+    }
+    public Edge edgeWithFlow(double flow){
+        return new Edge(from, to, weight, flow);
+    }
+    public Edge edgeWithCap(double c){
+        return new Edge(from, to, c, flow);
+    }
+    public void addFlow(double flow){
+        this.flow += flow;
     }
 }
